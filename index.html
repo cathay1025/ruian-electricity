@@ -1,0 +1,717 @@
+<title>瑞安街電費計算工具</title>
+<style>
+  :root {
+    --bg: #F4F2ED;
+    --card: #FFFFFF;
+    --input-bg: #FAFAF8;
+    --text: #2D2A26;
+    --text-2: #7A756C;
+    --accent: #2B6B5E;
+    --accent-pale: #E6EFED;
+    --gold: #B8892E;
+    --gold-pale: #FBF6EC;
+    --rule: #D6D1C9;
+    --rule-light: #EAE6E0;
+    --red: #B85440;
+    --shadow: 0 1px 4px rgba(45,42,38,.06);
+  }
+  @media(prefers-color-scheme:dark){:root{
+    --bg:#1A1B1E;--card:#232529;--input-bg:#2C2E33;
+    --text:#E2DFD9;--text-2:#918C84;
+    --accent:#5EAFA0;--accent-pale:#1E302D;
+    --gold:#D4A843;--gold-pale:#2C2819;
+    --rule:#3A3C40;--rule-light:#313337;
+    --red:#D4714F;--shadow:0 1px 4px rgba(0,0,0,.25);
+  }}
+  :root[data-theme="dark"]{
+    --bg:#1A1B1E;--card:#232529;--input-bg:#2C2E33;
+    --text:#E2DFD9;--text-2:#918C84;
+    --accent:#5EAFA0;--accent-pale:#1E302D;
+    --gold:#D4A843;--gold-pale:#2C2819;
+    --rule:#3A3C40;--rule-light:#313337;
+    --red:#D4714F;--shadow:0 1px 4px rgba(0,0,0,.25);
+  }
+  :root[data-theme="light"]{
+    --bg:#F4F2ED;--card:#FFFFFF;--input-bg:#FAFAF8;
+    --text:#2D2A26;--text-2:#7A756C;
+    --accent:#2B6B5E;--accent-pale:#E6EFED;
+    --gold:#B8892E;--gold-pale:#FBF6EC;
+    --rule:#D6D1C9;--rule-light:#EAE6E0;
+    --red:#B85440;--shadow:0 1px 4px rgba(45,42,38,.06);
+  }
+
+  *{margin:0;padding:0;box-sizing:border-box}
+
+  body{
+    font-family:-apple-system,"PingFang TC","Microsoft JhengHei","Noto Sans TC",sans-serif;
+    background:var(--bg);color:var(--text);line-height:1.6;
+    padding:28px 16px;
+  }
+  .wrap{max-width:700px;margin:0 auto}
+
+  .hdr{
+    background:#2C1F15;border-radius:10px;padding:20px 24px;
+    margin-bottom:24px;display:flex;align-items:center;gap:16px;
+    box-shadow:0 2px 8px rgba(44,31,21,.25);
+  }
+  .hdr-logo{flex-shrink:0}
+  .hdr-text{display:flex;flex-direction:column;gap:2px}
+  .hdr-brand{font-size:18px;font-weight:700;color:#FFFFFF;letter-spacing:2px}
+  .hdr-en{font-size:12px;color:#9A8A78;letter-spacing:1px;font-weight:400}
+  .hdr-addr{font-size:13px;color:#C8B99A;margin-top:6px;letter-spacing:1px}
+  @media(max-width:480px){
+    .hdr{flex-direction:column;text-align:center;padding:16px}
+    .hdr-text{align-items:center}
+  }
+
+  .cfg{
+    background:var(--card);border:1px solid var(--rule);border-radius:8px;
+    padding:14px 18px;margin-bottom:14px;box-shadow:var(--shadow);
+    display:flex;flex-wrap:wrap;gap:10px 24px;align-items:center;
+  }
+  .cfg label{font-size:13px;color:var(--text-2);white-space:nowrap}
+  .cfg input{
+    font-family:inherit;font-size:14px;padding:4px 8px;
+    border:1px solid var(--rule);border-radius:4px;
+    background:var(--input-bg);color:var(--text);
+    font-variant-numeric:tabular-nums;
+  }
+  .cfg input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-pale)}
+  .cfg input[type="number"]{width:64px;text-align:right}
+  .cfg input[type="month"]{width:148px}
+
+  .bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+  .btn{
+    font-family:inherit;font-size:13px;font-weight:600;
+    padding:7px 14px;border:1px solid var(--rule);border-radius:6px;
+    cursor:pointer;background:var(--card);color:var(--text);transition:.15s;
+  }
+  .btn:hover{border-color:var(--accent);color:var(--accent)}
+  .btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .btn.pri{background:var(--accent);color:#fff;border-color:var(--accent)}
+  .btn.pri:hover{opacity:.88;color:#fff}
+  .btn.dan{color:var(--red);border-color:var(--red)}
+  .btn.dan:hover{background:var(--red);color:#fff}
+
+  /* ── start panel ── */
+  .start-panel{
+    background:var(--card);border:1px solid var(--accent);border-radius:8px;
+    padding:16px 18px;margin-bottom:14px;box-shadow:var(--shadow);
+    display:none;
+  }
+  .start-panel.open{display:block}
+  .start-panel h3{
+    font-size:14px;font-weight:600;color:var(--accent);margin-bottom:4px;
+  }
+  .start-panel .hint{font-size:12px;color:var(--text-2);margin-bottom:12px}
+  .start-grid{
+    display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));
+    gap:8px;
+  }
+  .start-row{
+    display:flex;align-items:center;gap:8px;
+    padding:6px 10px;background:var(--input-bg);border-radius:6px;
+  }
+  .start-row .room-label{
+    font-size:13px;font-weight:600;color:var(--accent);min-width:32px;
+  }
+  .start-row input{
+    font-family:inherit;font-size:13px;font-variant-numeric:tabular-nums;
+    width:72px;padding:3px 6px;border:1px solid var(--rule);border-radius:4px;
+    background:var(--card);color:var(--text);text-align:right;
+  }
+  .start-row input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-pale)}
+  .start-row .x{font-size:11px;color:var(--text-2)}
+  .start-actions{margin-top:12px;display:flex;gap:8px}
+
+  /* ── table ── */
+  .tcard{
+    background:var(--card);border:1px solid var(--rule);border-radius:8px;
+    overflow:hidden;box-shadow:var(--shadow);margin-bottom:14px;
+  }
+  .twrap{overflow-x:auto}
+  table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+  thead th{
+    font-size:11px;font-weight:600;color:var(--text-2);
+    text-transform:uppercase;letter-spacing:.5px;
+    padding:10px 10px;text-align:right;
+    background:var(--input-bg);border-bottom:2px solid var(--rule);
+    white-space:nowrap;
+  }
+  thead th:first-child,thead th:nth-child(2){text-align:left}
+  tbody td{
+    padding:7px 10px;font-size:14px;text-align:right;
+    border-bottom:1px solid var(--rule-light);
+  }
+  tbody td:first-child{text-align:left;font-weight:600;color:var(--accent);white-space:nowrap}
+  tbody td:nth-child(2){text-align:left}
+  tbody tr:last-child td{border-bottom:none}
+  tbody tr:hover{background:var(--accent-pale)}
+
+  tbody td input[type="number"]{
+    font-family:inherit;font-size:14px;font-variant-numeric:tabular-nums;
+    width:76px;padding:3px 6px;border:1px solid var(--rule);border-radius:4px;
+    background:var(--input-bg);color:var(--text);text-align:right;
+  }
+  tbody td input[type="number"]:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-pale)}
+  .tn-input{
+    font-family:inherit;font-size:13px;width:56px;padding:3px 6px;
+    border:1px solid var(--rule);border-radius:4px;
+    background:var(--input-bg);color:var(--text);text-align:left;
+  }
+  .tn-input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-pale)}
+
+  .u{font-weight:600;color:var(--accent)}
+  .c{font-weight:700;color:var(--gold)}
+  .dm{font-size:10px;color:var(--text-2);font-weight:400}
+
+  tfoot td{
+    padding:11px 10px;font-size:14px;font-weight:700;
+    border-top:2px solid var(--rule);background:var(--gold-pale);text-align:right;
+  }
+  tfoot td:first-child{text-align:left;color:var(--text)}
+  .tc{font-size:16px;color:var(--gold)}
+
+  .info{
+    background:var(--card);border:1px solid var(--rule);border-radius:8px;
+    padding:14px 18px;box-shadow:var(--shadow);font-size:13px;
+    color:var(--text-2);line-height:1.9;
+  }
+  .info strong{color:var(--text)}
+
+  .hist{
+    background:var(--card);border:1px solid var(--rule);border-radius:8px;
+    padding:14px 18px;margin-top:14px;box-shadow:var(--shadow);
+  }
+  .hist h3{font-size:13px;font-weight:600;margin-bottom:8px;color:var(--text-2)}
+  .chips{display:flex;flex-wrap:wrap;gap:6px}
+  .chip{
+    font-family:inherit;font-size:12px;padding:4px 10px;
+    border:1px solid var(--rule);border-radius:4px;
+    cursor:pointer;background:var(--input-bg);color:var(--text-2);
+  }
+  .chip:hover{border-color:var(--accent);color:var(--accent)}
+  .chip.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+
+  .announce-banner{
+    display:none;text-align:center;padding:10px;
+    background:var(--accent-pale);border:1px dashed var(--accent);
+    border-radius:8px;margin-bottom:14px;font-size:12px;color:var(--accent);
+  }
+  .month-line{display:none;text-align:center;font-size:15px;font-weight:600;color:var(--text);margin-bottom:14px}
+  .sv{display:none}
+  .show-a{display:none !important}
+
+  /* ── stats panel ── */
+  .stats-panel{
+    background:var(--card);border:1px solid var(--rule);border-radius:8px;
+    padding:16px 18px;margin-top:14px;box-shadow:var(--shadow);
+    display:none;
+  }
+  .stats-panel.open{display:block}
+  .stats-header{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+  .stats-header h3{font-size:14px;font-weight:600;color:var(--accent);margin:0}
+  .stats-header select{
+    font-family:inherit;font-size:13px;padding:4px 8px;
+    border:1px solid var(--rule);border-radius:4px;
+    background:var(--input-bg);color:var(--text);
+  }
+  .stats-section{margin-bottom:18px}
+  .stats-section:last-child{margin-bottom:0}
+  .stats-section h4{font-size:12px;font-weight:600;color:var(--text-2);letter-spacing:.5px;margin-bottom:8px;text-transform:uppercase}
+  .stats-table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:13px}
+  .stats-table th{
+    text-align:right;padding:6px 8px;font-weight:600;color:var(--text-2);font-size:11px;
+    border-bottom:2px solid var(--rule);background:var(--input-bg);white-space:nowrap;
+  }
+  .stats-table th:first-child{text-align:left}
+  .stats-table td{text-align:right;padding:6px 8px;border-bottom:1px solid var(--rule-light)}
+  .stats-table td:first-child{text-align:left;font-weight:600;color:var(--accent)}
+  .stats-table tfoot td{font-weight:700;border-top:2px solid var(--rule);background:var(--gold-pale)}
+  .stats-table .cost-col{color:var(--gold);font-weight:600}
+  .stats-table .twrap{overflow-x:auto}
+  .stats-actions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+
+  .A .cfg,.A .bar,.A .hist,.A .start-panel,.A .stats-panel,.A .announce-banner-hide{display:none !important}
+  .A .announce-banner{display:block}
+  .A .month-line{display:block}
+  .A .show-a{display:inline-flex !important}
+  .A .hide-a{display:none !important}
+  .A tbody td input,.A .tn-input{display:none}
+  .A .sv{display:inline}
+  .A .bar-a{
+    display:flex !important;gap:8px;flex-wrap:wrap;margin-bottom:14px;
+    justify-content:center;
+  }
+  .bar-a{display:none}
+
+  @media(max-width:600px){
+    body{padding:14px 8px}
+    .cfg{flex-direction:column;align-items:stretch}
+    thead th,tbody td{padding:6px 6px;font-size:12px}
+    tbody td input[type="number"]{width:64px}
+    .tn-input{width:48px}
+    .start-grid{grid-template-columns:1fr}
+  }
+</style>
+
+<div class="wrap" id="app">
+
+  <div class="hdr">
+    <div class="hdr-logo">
+      <svg width="52" height="52" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+        <rect x="18" y="12" width="10" height="80" rx="2" fill="#A0814E"/>
+        <rect x="72" y="12" width="10" height="80" rx="2" fill="#A0814E"/>
+        <polyline points="14,52 50,24 86,52" fill="none" stroke="#FFFFFF" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    <div class="hdr-text">
+      <div class="hdr-brand">好窩生活共生宅</div>
+      <div class="hdr-en">House Work ── 仕誠有限公司</div>
+      <div class="hdr-addr">瑞安街 電費明細</div>
+    </div>
+  </div>
+
+  <div class="cfg">
+    <label>計費月份</label>
+    <input type="month" id="mo">
+    <label>每度電費</label>
+    <input type="number" id="rate" value="6" step="0.1" min="0">
+    <label>元</label>
+  </div>
+
+  <div class="bar hide-a">
+    <button class="btn pri" onclick="doSave()">儲存本月</button>
+    <button class="btn" onclick="toggle()">公告模式</button>
+    <button class="btn" onclick="toggleStart()">起始設定</button>
+    <button class="btn" onclick="toggleStats()">統計報表</button>
+    <button class="btn" onclick="exportCSV()">匯出 CSV</button>
+    <button class="btn" onclick="runDemo()">載入範例</button>
+    <button class="btn dan" onclick="doReset()">清除本月</button>
+  </div>
+
+  <div class="bar-a">
+    <button class="btn show-a" onclick="toggle()">返回編輯</button>
+  </div>
+
+  <div class="start-panel" id="startPanel">
+    <h3>各房起始度數設定</h3>
+    <div class="hint">新租客簽約時，在此更新該房間的起始電表度數。儲存後，該房若無歷史紀錄，將以此度數作為「上期度數」。</div>
+    <div class="start-grid" id="startGrid"></div>
+    <div class="start-actions">
+      <button class="btn pri" onclick="saveStarts()">儲存起始度數</button>
+      <button class="btn" onclick="toggleStart()">收起</button>
+    </div>
+  </div>
+
+  <div class="announce-banner">截圖此畫面，透過 LINE 傳送給租客</div>
+  <div class="month-line" id="mline"></div>
+
+  <div class="tcard">
+    <div class="twrap">
+      <table>
+        <thead><tr>
+          <th>房號</th><th>住戶</th><th>上期度數</th><th>本期度數</th><th>用電度數</th><th>電費</th>
+        </tr></thead>
+        <tbody id="tb"></tbody>
+        <tfoot><tr>
+          <td colspan="4">合計</td>
+          <td id="su">—</td>
+          <td class="tc" id="sc">—</td>
+        </tr></tfoot>
+      </table>
+    </div>
+  </div>
+
+  <div class="info" id="bankBox">
+    <strong>繳費方式：</strong>請於收到通知後 7 日內轉帳至指定帳戶<br>
+    如有疑問歡迎聯繫房東
+  </div>
+
+  <div class="hist" id="histBox">
+    <h3>歷史紀錄</h3>
+    <div class="chips" id="chips"><span style="font-size:12px;color:var(--text-2)">尚無紀錄</span></div>
+  </div>
+
+  <div class="stats-panel" id="statsPanel">
+    <div class="stats-header">
+      <h3>統計報表</h3>
+      <div style="display:flex;gap:8px;align-items:center">
+        <select id="statsYear" onchange="renderStats()"></select>
+        <button class="btn" onclick="toggleStats()">收起</button>
+      </div>
+    </div>
+    <div class="stats-section">
+      <h4>月度總覽</h4>
+      <div class="twrap"><table class="stats-table" id="monthlyTable"></table></div>
+    </div>
+    <div class="stats-section">
+      <h4>各房年度統計</h4>
+      <div class="twrap"><table class="stats-table" id="roomTable"></table></div>
+    </div>
+    <div class="stats-actions">
+      <button class="btn pri" onclick="exportCSV()">匯出 CSV</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const DEFAULTS={
+  '101':6754,'102':12403,'103':12268,'104':10177,
+  '105':6290,'106':8691,'107':4419,
+  '108':3114,'108b':52172,
+  '109':5745,'110':7607
+};
+const ROOMS=[
+  {id:'101'},{id:'102'},{id:'103'},{id:'104'},
+  {id:'105'},{id:'106'},{id:'107'},
+  {id:'108',dual:true},
+  {id:'109'},{id:'110'},
+];
+const SK='ruian_elec';
+
+function ld(){
+  try{
+    const d=JSON.parse(localStorage.getItem(SK));
+    if(d){
+      if(!d.s)d.s={};
+      if(!d.m)d.m={};
+      if(!d.t)d.t={};
+      return d;
+    }
+  }catch{}
+  return{m:{},t:{},s:{}};
+}
+function sv(d){localStorage.setItem(SK,JSON.stringify(d))}
+function gr(){return parseFloat(document.getElementById('rate').value)||6}
+function gm(){return document.getElementById('mo').value}
+
+function getStart(rid){
+  const d=ld();
+  if(d.s[rid]!==undefined) return d.s[rid];
+  return DEFAULTS[rid]??0;
+}
+
+function prevMonth(mo){
+  if(!mo)return null;
+  const d=ld(),ms=Object.keys(d.m).sort(),before=ms.filter(x=>x<mo);
+  return before.length?before[before.length-1]:null;
+}
+
+function prevRead(rid,mo){
+  const d=ld(),pm=prevMonth(mo),rm=ROOMS.find(x=>x.id===rid);
+  if(pm&&d.m[pm]&&d.m[pm][rid])return d.m[pm][rid];
+  if(rm.dual) return{r1:getStart('108'),r2:getStart('108b')};
+  return{r1:getStart(rid)};
+}
+
+function renderStartPanel(){
+  let html='';
+  ROOMS.forEach(rm=>{
+    if(rm.dual){
+      const v1=getStart('108'),v2=getStart('108b');
+      html+=`<div class="start-row">
+        <span class="room-label">${rm.id}</span>
+        <input type="number" data-sid="108" value="${v1}" placeholder="108表">
+        <span class="x">+</span>
+        <input type="number" data-sid="108b" value="${v2}" placeholder="111表">
+      </div>`;
+    }else{
+      const v=getStart(rm.id);
+      html+=`<div class="start-row">
+        <span class="room-label">${rm.id}</span>
+        <input type="number" data-sid="${rm.id}" value="${v}" placeholder="度數">
+      </div>`;
+    }
+  });
+  document.getElementById('startGrid').innerHTML=html;
+}
+
+function saveStarts(){
+  const d=ld();
+  document.querySelectorAll('#startGrid input[data-sid]').forEach(inp=>{
+    if(inp.value!=='') d.s[inp.dataset.sid]=Number(inp.value);
+  });
+  sv(d);
+  render();
+  alert('起始度數已儲存！');
+}
+
+function toggleStart(){
+  const p=document.getElementById('startPanel');
+  p.classList.toggle('open');
+  if(p.classList.contains('open')) renderStartPanel();
+}
+
+function render(){
+  const mo=gm(),rate=gr(),d=ld(),cur=mo&&d.m[mo]||{};
+  let tu=0,tc=0,html='';
+  ROOMS.forEach(rm=>{
+    const p=prevRead(rm.id,mo),tn=d.t[rm.id]||'',c=cur[rm.id]||{};
+    if(rm.dual){
+      const p1=p.r1??getStart('108'),p2=p.r2??getStart('108b'),pt=p1+p2;
+      const c1=c.r1??'',c2=c.r2??'';
+      const ok=c1!==''&&c2!=='';
+      const usage=ok?(+c1+ +c2)-pt:null;
+      const cost=usage!==null?Math.round(usage*rate):null;
+      if(usage!==null){tu+=usage;tc+=cost}
+      html+=`<tr>
+        <td>${rm.id}<br><span class="dm">108+111</span></td>
+        <td><input class="tn-input" data-r="${rm.id}" value="${esc(tn)}" placeholder="姓名" oninput="utn(this)"><span class="sv">${esc(tn)}</span></td>
+        <td>${p1.toLocaleString()}<br><span class="dm">+ ${p2.toLocaleString()}</span></td>
+        <td>
+          <input type="number" data-r="${rm.id}" data-f="r1" value="${c1}" placeholder="108表" oninput="calc()">
+          <input type="number" data-r="${rm.id}" data-f="r2" value="${c2}" placeholder="111表" oninput="calc()" style="margin-top:2px">
+          <span class="sv">${ok?(+c1).toLocaleString()+'<br><span class=dm>+ '+(+c2).toLocaleString()+'</span>':'—'}</span>
+        </td>
+        <td class="u">${usage!==null?usage.toLocaleString():'—'}</td>
+        <td class="c">${cost!==null?'$'+cost.toLocaleString():'—'}</td>
+      </tr>`;
+    }else{
+      const pr=p.r1??getStart(rm.id),cr=c.r1??'';
+      const ok=cr!=='';
+      const usage=ok?+cr-pr:null;
+      const cost=usage!==null?Math.round(usage*rate):null;
+      if(usage!==null){tu+=usage;tc+=cost}
+      html+=`<tr>
+        <td>${rm.id}</td>
+        <td><input class="tn-input" data-r="${rm.id}" value="${esc(tn)}" placeholder="姓名" oninput="utn(this)"><span class="sv">${esc(tn)}</span></td>
+        <td>${pr.toLocaleString()}</td>
+        <td>
+          <input type="number" data-r="${rm.id}" data-f="r1" value="${cr}" placeholder="度數" oninput="calc()">
+          <span class="sv">${ok?(+cr).toLocaleString():'—'}</span>
+        </td>
+        <td class="u">${usage!==null?usage.toLocaleString():'—'}</td>
+        <td class="c">${cost!==null?'$'+cost.toLocaleString():'—'}</td>
+      </tr>`;
+    }
+  });
+  document.getElementById('tb').innerHTML=html;
+  document.getElementById('su').textContent=tu>0?tu.toLocaleString():'—';
+  document.getElementById('sc').textContent=tc>0?'$'+tc.toLocaleString():'—';
+  if(mo){
+    const[y,m]=mo.split('-');
+    document.getElementById('mline').textContent=`${y} 年 ${+m} 月份電費明細 ｜ 每度 ${rate} 元`;
+  }
+}
+
+function esc(s){return s.replace(/</g,'&lt;').replace(/"/g,'&quot;')}
+
+function calc(){
+  const mo=gm(),rate=gr();let tu=0,tc=0;
+  document.querySelectorAll('#tb tr').forEach((tr,i)=>{
+    const rm=ROOMS[i],p=prevRead(rm.id,mo);
+    if(rm.dual){
+      const ins=tr.querySelectorAll('input[type="number"]');
+      if(ins[0]?.value&&ins[1]?.value){
+        const pt=(p.r1??getStart('108'))+(p.r2??getStart('108b'));
+        const u=(+ins[0].value+ +ins[1].value)-pt;
+        const c=Math.round(u*rate);
+        tr.querySelector('.u').textContent=u.toLocaleString();
+        tr.querySelector('.c').textContent='$'+c.toLocaleString();
+        tu+=u;tc+=c;
+      }else{
+        tr.querySelector('.u').textContent='—';
+        tr.querySelector('.c').textContent='—';
+      }
+    }else{
+      const inp=tr.querySelector('input[type="number"]');
+      if(inp?.value){
+        const pr=p.r1??getStart(rm.id);
+        const u=+inp.value-pr;
+        const c=Math.round(u*rate);
+        tr.querySelector('.u').textContent=u.toLocaleString();
+        tr.querySelector('.c').textContent='$'+c.toLocaleString();
+        tu+=u;tc+=c;
+      }else{
+        tr.querySelector('.u').textContent='—';
+        tr.querySelector('.c').textContent='—';
+      }
+    }
+  });
+  document.getElementById('su').textContent=tu>0?tu.toLocaleString():'—';
+  document.getElementById('sc').textContent=tc>0?'$'+tc.toLocaleString():'—';
+}
+
+function utn(el){const d=ld();d.t[el.dataset.r]=el.value;sv(d)}
+
+function doSave(){
+  const mo=gm();
+  if(!mo){alert('請先選擇計費月份');return}
+  const d=ld();if(!d.m[mo])d.m[mo]={};
+  document.querySelectorAll('#tb tr').forEach((tr,i)=>{
+    const rm=ROOMS[i],ins=tr.querySelectorAll('input[type="number"]');
+    if(rm.dual){
+      if(ins[0]?.value&&ins[1]?.value)
+        d.m[mo][rm.id]={r1:+ins[0].value,r2:+ins[1].value};
+    }else{
+      if(ins[0]?.value)d.m[mo][rm.id]={r1:+ins[0].value};
+    }
+  });
+  d.rate=gr();sv(d);rhist();
+  alert(`${mo} 紀錄已儲存`);
+}
+
+function doReset(){
+  if(!confirm('確定要清除本月所有數據？'))return;
+  const mo=gm();if(mo){const d=ld();delete d.m[mo];sv(d)}
+  render();rhist();
+}
+
+function toggle(){document.getElementById('app').classList.toggle('A')}
+
+function rhist(){
+  const d=ld(),ms=Object.keys(d.m).sort().reverse(),el=document.getElementById('chips');
+  if(!ms.length){el.innerHTML='<span style="font-size:12px;color:var(--text-2)">尚無紀錄</span>';return}
+  const cm=gm();
+  el.innerHTML=ms.map(m=>{
+    const[y,mo]=m.split('-');
+    return`<button class="chip${m===cm?' on':''}" onclick="loadM('${m}')">${y}/${mo}</button>`;
+  }).join('');
+}
+
+function loadM(m){document.getElementById('mo').value=m;render();rhist()}
+
+function toggleStats(){
+  const p=document.getElementById('statsPanel');
+  p.classList.toggle('open');
+  if(p.classList.contains('open')){populateYears();renderStats()}
+}
+
+function populateYears(){
+  const d=ld(),ms=Object.keys(d.m).sort(),sel=document.getElementById('statsYear');
+  const years=[...new Set(ms.map(m=>m.split('-')[0]))].sort().reverse();
+  if(!years.length)years.push(String(new Date().getFullYear()));
+  sel.innerHTML=years.map(y=>`<option value="${y}">${y} 年</option>`).join('');
+}
+
+function calcUsageForMonth(rid,mo){
+  const d=ld(),rm=ROOMS.find(x=>x.id===rid);
+  if(!d.m[mo]||!d.m[mo][rid])return null;
+  const cur=d.m[mo][rid],p=prevRead(rid,mo);
+  if(rm.dual){
+    const pt=(p.r1??getStart('108'))+(p.r2??getStart('108b'));
+    if(cur.r1==null||cur.r2==null)return null;
+    return cur.r1+cur.r2-pt;
+  }
+  const pr=p.r1??getStart(rid);
+  if(cur.r1==null)return null;
+  return cur.r1-pr;
+}
+
+function renderStats(){
+  const d=ld(),year=document.getElementById('statsYear').value,rate=gr();
+  const yearMonths=Object.keys(d.m).filter(m=>m.startsWith(year)).sort();
+
+  // monthly overview
+  let mhtml='<thead><tr><th>月份</th><th>總用電 (度)</th><th>總電費</th></tr></thead><tbody>';
+  let grandU=0,grandC=0;
+  yearMonths.forEach(mo=>{
+    let mu=0;
+    ROOMS.forEach(rm=>{const u=calcUsageForMonth(rm.id,mo);if(u!==null)mu+=u});
+    const mc=Math.round(mu*rate);
+    grandU+=mu;grandC+=mc;
+    const[,mm]=mo.split('-');
+    mhtml+=`<tr><td>${+mm} 月</td><td>${mu.toLocaleString()}</td><td class="cost-col">$${mc.toLocaleString()}</td></tr>`;
+  });
+  mhtml+=`</tbody><tfoot><tr><td>年度合計</td><td>${grandU.toLocaleString()}</td><td class="cost-col">$${grandC.toLocaleString()}</td></tr></tfoot>`;
+  document.getElementById('monthlyTable').innerHTML=mhtml;
+
+  // per-room stats
+  let rhtml='<thead><tr><th>房號</th><th>住戶</th><th>年度用電</th><th>年度電費</th><th>月均用電</th></tr></thead><tbody>';
+  let allU=0,allC=0;
+  ROOMS.forEach(rm=>{
+    let ru=0,cnt=0;
+    yearMonths.forEach(mo=>{const u=calcUsageForMonth(rm.id,mo);if(u!==null){ru+=u;cnt++}});
+    const rc=Math.round(ru*rate),avg=cnt>0?Math.round(ru/cnt):0;
+    allU+=ru;allC+=rc;
+    const tn=d.t[rm.id]||'';
+    rhtml+=`<tr><td>${rm.id}</td><td>${tn}</td><td>${ru.toLocaleString()}</td><td class="cost-col">$${rc.toLocaleString()}</td><td>${avg.toLocaleString()}</td></tr>`;
+  });
+  rhtml+=`</tbody><tfoot><tr><td colspan="2">合計</td><td>${allU.toLocaleString()}</td><td class="cost-col">$${allC.toLocaleString()}</td><td>—</td></tr></tfoot>`;
+  document.getElementById('roomTable').innerHTML=rhtml;
+}
+
+function exportCSV(){
+  const d=ld(),year=document.getElementById('statsYear').value,rate=gr();
+  const yearMonths=Object.keys(d.m).filter(m=>m.startsWith(year)).sort();
+  if(!yearMonths.length){alert('該年度尚無紀錄');return}
+
+  let csv='﻿';
+  csv+='月份,'+ROOMS.map(r=>r.id+'用電').join(',')+','+ROOMS.map(r=>r.id+'電費').join(',')+',總用電,總電費\n';
+  yearMonths.forEach(mo=>{
+    const[,mm]=mo.split('-');
+    let usages=[],costs=[],tu=0;
+    ROOMS.forEach(rm=>{
+      const u=calcUsageForMonth(rm.id,mo);
+      usages.push(u!==null?u:'');
+      costs.push(u!==null?Math.round(u*rate):'');
+      if(u!==null)tu+=u;
+    });
+    csv+=`${+mm}月,${usages.join(',')},${costs.join(',')},${tu},${Math.round(tu*rate)}\n`;
+  });
+
+  csv+='\n各房年度統計\n';
+  csv+='房號,住戶,年度用電,年度電費,月均用電\n';
+  ROOMS.forEach(rm=>{
+    let ru=0,cnt=0;
+    yearMonths.forEach(mo=>{const u=calcUsageForMonth(rm.id,mo);if(u!==null){ru+=u;cnt++}});
+    const tn=d.t[rm.id]||'';
+    csv+=`${rm.id},${tn},${ru},${Math.round(ru*rate)},${cnt>0?Math.round(ru/cnt):0}\n`;
+  });
+
+  const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=`瑞安街電費_${year}.csv`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+var demoStep=0;
+function runDemo(){
+  if(demoStep===0){
+    if(!confirm('開始引導測試！\n\n步驟 1／3：設定起始度數\n\n按「確定」後會清除舊資料，打開起始設定面板。\n請輸入各房間簽約時的電表度數，然後按「儲存起始度數」。\n\n完成後再按一次「下一步」繼續。'))return;
+    const d={m:{},t:{},s:{},rate:6};
+    d.s={'101':6754,'102':12403,'103':12268,'104':10177,'105':6290,'106':8691,'107':4419,'108':3114,'108b':52172,'109':5745,'110':7607};
+    sv(d);
+    document.getElementById('rate').value=6;
+    document.getElementById('mo').value='2026-07';
+    render();rhist();
+    document.getElementById('startPanel').classList.add('open');
+    renderStartPanel();
+    demoStep=1;
+    document.querySelector('[onclick="runDemo()"]').textContent='下一步 (2/3)';
+  }else if(demoStep===1){
+    if(!confirm('步驟 2／3：輸入第一個月的電表度數\n\n現在是 2026 年 7 月。\n請在表格的「本期度數」欄位，輸入你去抄表看到的數字。\n\n隨便填一些比起始度數大的數字就好，例如：\n101 填 6850、102 填 12500⋯\n\n填完後按「儲存本月」，再按「下一步」。'))return;
+    document.getElementById('startPanel').classList.remove('open');
+    demoStep=2;
+    document.querySelector('[onclick="runDemo()"]').textContent='下一步 (3/3)';
+  }else if(demoStep===2){
+    if(!confirm('步驟 3／3：下個月抄表\n\n按「確定」後會跳到 8 月。\n你會看到「上期度數」自動變成你剛剛 7 月填的數字。\n\n再輸入 8 月的「本期度數」（比 7 月大的數字），\n系統就會自動算出用電量和電費。\n\n最後可以按「公告模式」看截圖畫面！'))return;
+    document.getElementById('mo').value='2026-08';
+    render();rhist();
+    demoStep=3;
+    document.querySelector('[onclick="runDemo()"]').textContent='重新測試';
+  }else{
+    demoStep=0;
+    document.querySelector('[onclick="runDemo()"]').textContent='載入範例';
+    runDemo();
+  }
+}
+
+(function init(){
+  const n=new Date(),y=n.getFullYear(),m=String(n.getMonth()+1).padStart(2,'0');
+  document.getElementById('mo').value=y+'-'+m;
+  const d=ld();if(d.rate)document.getElementById('rate').value=d.rate;
+  render();rhist();
+  document.getElementById('mo').addEventListener('change',()=>{render();rhist()});
+  document.getElementById('rate').addEventListener('input',()=>{
+    calc();
+    const mo=gm();if(mo){
+      const[yy,mm]=mo.split('-');
+      document.getElementById('mline').textContent=`${yy} 年 ${+mm} 月份電費明細 ｜ 每度 ${gr()} 元`;
+    }
+  });
+})();
+</script>
