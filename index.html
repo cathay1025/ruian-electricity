@@ -372,8 +372,21 @@ function ld(){return DB}
 function gr(){return parseFloat(document.getElementById('rate').value)||6}
 function gm(){return document.getElementById('mo').value}
 
+function fmtMonth(k){
+  const m=k.match(/^(\w+)\s+(\w+)\s+(\d+)\s+(\d{4})/);
+  if(m){
+    const mo={'Jan':'01','Feb':'02','Mar':'03','Apr':'04','May':'05','Jun':'06',
+      'Jul':'07','Aug':'08','Sep':'09','Oct':'10','Nov':'11','Dec':'12'};
+    return m[4]+'-'+(mo[m[2]]||'01');
+  }
+  return k;
+}
+
 function fromAPI(data){
-  const d={m:data.months||{},t:{},s:{},rate:data.rate||6};
+  const raw=data.months||{};
+  const months={};
+  Object.keys(raw).forEach(k=>{months[fmtMonth(k)]=raw[k]});
+  const d={m:months,t:{},s:{},rate:data.rate||6};
   (data.rooms||[]).forEach(r=>{
     d.t[r.id]=r.tenant||'';
     d.s[r.id]=r.start||0;

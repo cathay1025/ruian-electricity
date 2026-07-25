@@ -3,6 +3,15 @@
 
 var SS = SpreadsheetApp.getActiveSpreadsheet();
 
+function fmtMonth(val) {
+  if (val instanceof Date) {
+    var y = val.getFullYear();
+    var m = val.getMonth() + 1;
+    return y + '-' + (m < 10 ? '0' : '') + m;
+  }
+  return String(val);
+}
+
 function doGet(e) {
   var action = (e && e.parameter && e.parameter.action) || 'getAll';
   var result;
@@ -62,7 +71,7 @@ function getAllData() {
   var months = {};
   var rData = records.getDataRange().getValues();
   for (var i = 1; i < rData.length; i++) {
-    var mo = rData[i][0];
+    var mo = fmtMonth(rData[i][0]);
     var rid = String(rData[i][1]);
     if (!mo || !rid) continue;
     if (!months[mo]) months[mo] = {};
@@ -85,7 +94,7 @@ function getMonthData(month) {
   var rData = records.getDataRange().getValues();
   var result = {};
   for (var i = 1; i < rData.length; i++) {
-    if (rData[i][0] === month) {
+    if (fmtMonth(rData[i][0]) === month) {
       var rid = String(rData[i][1]);
       result[rid] = { r1: rData[i][2] || 0 };
       if (rData[i][3]) result[rid].r2 = rData[i][3];
@@ -101,16 +110,20 @@ function saveMonth(month, readings) {
   // 刪除該月份的舊資料
   var rowsToDelete = [];
   for (var i = rData.length - 1; i >= 1; i--) {
-    if (rData[i][0] === month) rowsToDelete.push(i + 1);
+    if (fmtMonth(rData[i][0]) === month) rowsToDelete.push(i + 1);
   }
   for (var i = 0; i < rowsToDelete.length; i++) {
     records.deleteRow(rowsToDelete[i]);
   }
 
-  // 寫入新資料
+  // 寫入新資料（月份欄設為文字格式，避免被解析成日期）
   for (var i = 0; i < readings.length; i++) {
     var r = readings[i];
-    records.appendRow([month, r.id, r.r1 || '', r.r2 || '']);
+    var newRow = records.getLastRow() + 1;
+    records.getRange(newRow, 1).setNumberFormat('@').setValue(month);
+    records.getRange(newRow, 2).setValue(r.id);
+    records.getRange(newRow, 3).setValue(r.r1 || '');
+    records.getRange(newRow, 4).setValue(r.r2 || '');
   }
 
   // 排序
